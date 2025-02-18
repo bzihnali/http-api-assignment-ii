@@ -5,7 +5,74 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    const handleResponse = async (response) => {
+      const content = document.getElementById('content');
 
+      await response.text().then((resText) => {
+        const contentType = response.headers.get('Content-Type');
+        console.log(contentType)
+        console.log(resText)
+        content.innerHTML = `<p>${resText}</p>`
+      });
+    };
+
+    const sendFetchRequest = async (url, acceptedType, passedMethod, body = {}) => {
+      let options = {
+        method: passedMethod,
+        headers: { 'Accept': acceptedType },
+      }
+
+      if (passedMethod == "POST") {
+        options.body = JSON.stringify(body)
+      }
+
+      console.log(options)
+
+      const fetchPromise = fetch(url, options);
+      fetchPromise.then((response) => { handleResponse(response) });
+    };
+
+    const sendPostRequest = async (url, postBody) => {
+      console.log(postBody)
+      await fetch("/addUser", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: postBody,
+      }).then((response) => {
+        handleResponse(response) 
+      });
+    }
+
+    const init = () => {
+      const userForm = document.getElementById("userForm");
+      const nameForm = document.getElementById("nameForm");
+      const urlField = document.getElementById("urlField");
+      const methodSelect = document.getElementById("methodSelect");
+
+      const send = () => {
+        if (methodSelect.value == "get") {
+          sendFetchRequest(urlField.value, "application/json", "GET");
+        }
+        if (methodSelect.value == "head") {
+          sendFetchRequest(urlField.value, "application/json", "HEAD");
+        }
+      }
+
+      userForm.addEventListener('submit', event => {
+        event.preventDefault();
+        send();
+      });
+
+      nameForm.addEventListener('submit', event => {
+        event.preventDefault();
+        sendPostRequest("/addUser", `name=${nameField.value}&age=${ageField.value}`);
+      });
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
